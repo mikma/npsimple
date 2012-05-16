@@ -14,6 +14,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 
 #if defined(XULRUNNER_SDK)
@@ -66,28 +68,42 @@ NP_END_MACRO
 
 #endif
 
+static FILE *s_log;
+static int s_loglevel = -1;
 static NPObject        *so       = NULL;
 static NPNetscapeFuncs *npnfuncs = NULL;
 static NPP              inst     = NULL;
 
 /* NPN */
 
-static void logmsg(const char *msg) {
-#if defined(ANDROID)
-	FILE *out = fopen("/sdcard/npsimple.log", "a");
-	if(out) {
-		fputs(msg, out);
-		fclose(out);
+static void logmsg(const char *format, ...) {
+	if (s_loglevel == -1) {
+		if (getenv("NPSIMPLE_LOG_LEVEL") != NULL) {
+			s_loglevel = atoi(getenv("NPSIMPLE_LOG_LEVEL"));
+		}
+		else {
+			s_loglevel = 0;
+		}
 	}
-#elif !defined(_WINDOWS)
-	fputs(msg, stderr);
-#else
-	FILE *out = fopen("\\npsimple.log", "a");
-	if(out) {
-		fputs(msg, out);
-		fclose(out);
+	if (s_loglevel != 0) {
+		va_list args;
+
+		if (s_log == NULL) {
+			if (getenv("NPSIMPLE_LOG_FILE") != NULL) {
+				s_log = fopen(getenv("NPSIMPLE_LOG_FILE"), "a");
+			}
+			if (s_log == NULL) {
+				s_log = stderr;
+			}
+		}
+
+		va_start(args, format);
+		fprintf(s_log, "SPCHBHO-HELPER ");
+		vfprintf(s_log, format, args);
+		fputc('\n', s_log);
+		fflush(s_log);
+		va_end(args);
 	}
-#endif
 }
 
 static bool
