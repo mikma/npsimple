@@ -33,10 +33,6 @@
 #define NPStringLen  UTF8Length
 extern JNIEnv *pluginJniEnv;
 
-typedef int16_t int16;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-
 #undef STRINGN_TO_NPVARIANT
 #define STRINGN_TO_NPVARIANT(_val, _len, _v)                                  \
 NP_BEGIN_MACRO                                                                \
@@ -167,7 +163,7 @@ static NPClass npcRefObject = {
 /* NPP */
 
 static NPError
-nevv(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char *argn[], char *argv[], NPSavedData *saved) {
+nevv(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char *argn[], char *argv[], NPSavedData *saved) {
 	inst = instance;
 	logmsg("npsimple: new\n");
 	return NPERR_NO_ERROR;
@@ -247,7 +243,7 @@ NP_GetEntryPoints(NPPluginFuncs *nppfuncs) {
 }
 
 #ifndef HIBYTE
-#define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
+#define HIBYTE(x) ((((uint32_t)(x)) & 0xff00) >> 8)
 #endif
 
 NPError OSCALL
