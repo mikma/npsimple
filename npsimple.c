@@ -199,10 +199,10 @@ getValue(NPP instance, NPPVariable variable, void *value) {
 		npnfuncs->retainobject(so);
 		*(NPObject **)value = so;
 		break;
-#if defined(XULRUNNER_SDK)
+#if defined(XULRUNNER_SDK) || defined(NPAPI_SDK)
 	case NPPVpluginNeedsXEmbed:
 		logmsg("npsimple: getvalue - xembed\n");
-		*((PRBool *)value) = PR_FALSE;
+		*((NPBool *)value) = true;
 		break;
 #endif
 	}
