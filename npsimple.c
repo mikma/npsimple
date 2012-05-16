@@ -62,6 +62,12 @@ NP_END_MACRO
 #define OSCALL WINAPI
 #endif
 
+#elif defined(NPAPI_SDK)
+
+#include <npapi.h>
+#include <npfunctions.h>
+#include <npruntime.h>
+
 #endif
 
 static NPObject        *so       = NULL;
