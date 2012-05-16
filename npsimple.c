@@ -68,6 +68,8 @@ NP_END_MACRO
 
 #endif
 
+#include "common.h"
+
 static FILE *s_log;
 static int s_loglevel = -1;
 static NPObject        *so       = NULL;
@@ -293,7 +295,7 @@ OSCALL NP_Shutdown() {
 char *
 NP_GetMIMEDescription(void) {
 	logmsg("npsimple: NP_GetMIMEDescription\n");
-	return "application/x-vnd-aplix-foo:.foo:anselm@aplix.co.jp";
+	return FOO_MIMETYPE ":.foo:anselm@aplix.co.jp";
 }
 
 NPError OSCALL /* needs to be present for WebKit based browsers */

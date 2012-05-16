@@ -20,7 +20,7 @@ options:
 
 ${OBJ}: config.mk
 
-npsimple.so: ${OBJ}
+npsimple.so: ${OBJ} common.h
 	@echo LD $@
 	@${CC} -v -shared -o $@ ${OBJ} ${LDFLAGS}
 
