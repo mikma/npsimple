@@ -1,55 +1,21 @@
-# general settings
-OS           = android
-NDK_BASE     = ${HOME}/android/ndk
-ANDROID_HOME = ${HOME}/android/mydroid
-INCS         = -I$(ANDROID_HOME)/dalvik/libnativehelper/include/nativehelper \
-		-I$(NDK_BASE)/include/bionic/arch-arm/include \
-		-I$(NDK_BASE)/include/bionic/include \
-		-I$(NDK_BASE)/include/kernel/include \
-		-I$(NDK_BASE)/include/libm/include \
-		-I$(NDK_BASE)/include/libm/include/arm \
-		-I$(NDK_BASE)/include/libstdc++/include \
-		-I$(ANDROID_HOME)/external/webkit/WebCore/bridge \
-		-I$(ANDROID_HOME)/external/webkit/WebCore/plugins \
-		-I$(ANDROID_HOME)/system/core/include \
-		-I$(ANDROID_HOME)/frameworks/base/include
+ifneq ($(TARGET_SIMULATOR),true)
 
-# flags
-#CPPFLAGS += -DUNIX -DANDROID -DHAVE_CONFIG_H -D_DEBUG=1 -DAAPCS -D_GNU_SOURCE -DNOUNCRYPT
-CPPFLAGS += -DUNIX -DANDROID -DHAVE_CONFIG_H -DAAPCS -D_GNU_SOURCE -DNOUNCRYPT
-CFLAGS   += -Os -fno-exceptions -static -c -fpic ${INCS} ${CPPFLAGS}
-EXPAT_CFLAGS += -DHAVE_MEMMOVE
-LDFLAGS  = -fPIC -nostdlib -Wl,-soname,npsimple.so -Wl,-shared,-Bsymbolic -shared -Wl,--gc-sections --Wl,--wrap,__aeabi_atexit
-LIBS     = -L$(NDK_BASE)/lib -lc -lm -ldl
-ALIB     = $(NDK_BASE)/toolchain/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a 
-POSTLINK = -Wl,--no-undefined $(ALIB) 
+LOCAL_PATH := $(call my-dir)
 
-# compiler and linker
-AR    = $(NDK_BASE)/toolchain/bin/arm-eabi-ar
-CC    = $(NDK_BASE)/toolchain/bin/arm-eabi-g++
-LD    = $(NDK_BASE)/toolchain/bin/arm-eabi-ld
-MAKE  = make
+include $(CLEAR_VARS)
 
-SRC = npsimple.c
-OBJ += ${SRC:.c=.o}
+LOCAL_SRC_FILES := \
+        npsimple.c
 
-all: options npsimple.so
+LOCAL_C_INCLUDES += \
+	${MOZILLA_HOME}/modules/plugin/base/public
 
-options:
-	@echo "OS             = ${OS}"
-	@echo "CC             = ${CC}"
-	@echo "CFLAGS         = ${CFLAGS}"
-	@echo "LDFLAGS        = ${LDFLAGS}"
+LOCAL_SHARED_LIBRARIES :=
+LOCAL_CPPFLAGS := -DANDROID -D_GNU_SOURCE
+LOCAL_LDFLAGS :=
+LOCAL_LDLIBS :=
+LOCAL_MODULE := npsimple
 
-%.o : %.c
-	@echo CC $<
-	@${CC} ${CFLAGS} -o $@ -c $<
+include $(BUILD_SHARED_LIBRARY)
 
-npsimple.so: ${OBJ}
-	@echo LINK -o $@ ${LDFLAGS} $^ $(LIBS) ${POSTLINK}
-	@${CC} -o $@ ${LDFLAGS} $^ $(LIBS) ${POSTLINK}
-
-clean:
-	rm -f npsimple.so ${OBJ}
-
-.PHONY: options all clean
+endif

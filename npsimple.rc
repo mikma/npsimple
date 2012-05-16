@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "common.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -57,7 +58,7 @@ BEGIN
             VALUE "FileVersion", "1, 0, 0, 1"
             VALUE "InternalName", "AplixFooPlugin"
             VALUE "LegalCopyright", "Copyright 2008 Aplix Corporation."
-            VALUE "MIMEType", "application/x-vnd-aplix-foo"
+            VALUE "MIMEType", FOO_MIMETYPE
             VALUE "OriginalFilename", "npsimple.dll"
             VALUE "ProductName", "Aplix Foo Plugin"
             VALUE "ProductVersion", "1, 0, 0, 3"
