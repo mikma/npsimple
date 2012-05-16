@@ -106,9 +106,8 @@ invokeDefault(NPObject *obj, const NPVariant *args, uint32_t argCount, NPVariant
 
 static bool
 invoke(NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t argCount, NPVariant *result) {
-	logmsg("npsimple: invoke\n");
-	int error = 1;
 	char *name = npnfuncs->utf8fromidentifier(methodName);
+	logmsg("npsimple: invoke\n");
 	if(name) {
 		if(!strcmp(name, "foo")) {
 			logmsg("npsimple: invoke foo\n");
@@ -129,7 +128,7 @@ invoke(NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t a
 			}
 		}
 	}
-	// aim exception handling
+	/* aim exception handling */
 	npnfuncs->setexception(obj, "exception during invocation");
 	return false;
 }
