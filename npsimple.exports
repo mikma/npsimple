@@ -1,0 +1,5 @@
+NP_GetEntryPoints
+NP_Initialize
+NP_Shutdown
+NP_GetMIMEDescription
+NP_GetValue

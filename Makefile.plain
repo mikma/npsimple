@@ -20,13 +20,13 @@ options:
 
 ${OBJ}: config.mk
 
-npsimple.so: ${OBJ}
+npsimple.so: ${OBJ} common.h
 	@echo LD $@
 	@${CC} -v -shared -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	@echo cleaning
-	@rm -f npsimple.so ${OBJ} Localized.rsrc
+	@rm -f npsimple.so ${OBJ} English.rsrc
 	@rm -rf npsimple.plugin
 
 Linux:
@@ -35,10 +35,10 @@ Linux:
 	@echo Test: /usr/lib/webkit-1.0/libexec/GtkLauncher file://`pwd`/${TEST} # apt-get install libwebkit-1.0-1
 
 Darwin:
-	/Developer/Tools/Rez -o Localized.rsrc -useDF Localized.r
+	/Developer/Tools/Rez -o English.rsrc -useDF English.r
 	mkdir -p npsimple.plugin/Contents/MacOS
 	mkdir -p npsimple.plugin/Contents/Resources/English.lproj
-	cp -r Localized.rsrc npsimple.plugin/Contents/Resources/English.lproj
+	cp -r English.rsrc npsimple.plugin/Contents/Resources/English.lproj
 	cp -f Info.plist npsimple.plugin/Contents
 	cp -f npsimple.so npsimple.plugin/Contents/MacOS/npsimple
 	@echo Setup: sudo ln -s `pwd`/npsimple.so /Library/Internet\\ Plug-Ins/npsimple.plugin

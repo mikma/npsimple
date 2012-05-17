@@ -13,14 +13,28 @@
  * License.
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#elif defined(_MSVC_VER)
+#include <config-msvc.h>
+#endif
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 
-#if defined(XULRUNNER_SDK)
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+
+#if defined(USE_SDK_XULRUNNER)
+
 #include <npapi.h>
 #include <npupp.h>
 #include <npruntime.h>
-#elif defined(ANDROID)
+
+#elif defined(USE_SDK_ANDROID)
 
 #undef HAVE_LONG_LONG
 #include <jni.h>
@@ -33,10 +47,6 @@
 #define NPStringLen  UTF8Length
 extern JNIEnv *pluginJniEnv;
 
-typedef int16_t int16;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-
 #undef STRINGN_TO_NPVARIANT
 #define STRINGN_TO_NPVARIANT(_val, _len, _v)                                  \
 NP_BEGIN_MACRO                                                                \
@@ -45,14 +55,14 @@ NP_BEGIN_MACRO                                                                \
     (_v).value.stringValue = str;                                             \
 NP_END_MACRO
 
-#elif defined(WEBKIT_DARWIN_SDK)
+#elif defined(USE_SDK_WEBKIT_DARWIN)
 
 #include <Webkit/npapi.h>
 #include <WebKit/npfunctions.h>
 #include <WebKit/npruntime.h>
 #define OSCALL
 
-#elif defined(WEBKIT_WINMOBILE_SDK) /* WebKit SDK on Windows */
+#elif defined(USE_SDK_WEBKIT_WINMOBILE) /* WebKit SDK on Windows */
 
 #ifndef PLATFORM
 #define PLATFORM(x) defined(x)
@@ -62,30 +72,52 @@ NP_END_MACRO
 #define OSCALL WINAPI
 #endif
 
+#elif defined(USE_SDK_NPAPI_SDK)
+
+#include <npapi.h>
+#include <npfunctions.h>
+#include <npruntime.h>
+
 #endif
 
+#include "common.h"
+
+static FILE *s_log;
+static int s_loglevel = -1;
 static NPObject        *so       = NULL;
 static NPNetscapeFuncs *npnfuncs = NULL;
 static NPP              inst     = NULL;
 
 /* NPN */
 
-static void logmsg(const char *msg) {
-#if defined(ANDROID)
-	FILE *out = fopen("/sdcard/npsimple.log", "a");
-	if(out) {
-		fputs(msg, out);
-		fclose(out);
+static void logmsg(const char *format, ...) {
+	if (s_loglevel == -1) {
+		if (getenv("NPSIMPLE_LOG_LEVEL") != NULL) {
+			s_loglevel = atoi(getenv("NPSIMPLE_LOG_LEVEL"));
+		}
+		else {
+			s_loglevel = 0;
+		}
 	}
-#elif !defined(_WINDOWS)
-	fputs(msg, stderr);
-#else
-	FILE *out = fopen("\\npsimple.log", "a");
-	if(out) {
-		fputs(msg, out);
-		fclose(out);
+	if (s_loglevel != 0) {
+		va_list args;
+
+		if (s_log == NULL) {
+			if (getenv("NPSIMPLE_LOG_FILE") != NULL) {
+				s_log = fopen(getenv("NPSIMPLE_LOG_FILE"), "a");
+			}
+			if (s_log == NULL) {
+				s_log = stderr;
+			}
+		}
+
+		va_start(args, format);
+		fprintf(s_log, "SPCHBHO-HELPER ");
+		vfprintf(s_log, format, args);
+		fputc('\n', s_log);
+		fflush(s_log);
+		va_end(args);
 	}
-#endif
 }
 
 static bool
@@ -104,9 +136,8 @@ invokeDefault(NPObject *obj, const NPVariant *args, uint32_t argCount, NPVariant
 
 static bool
 invoke(NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t argCount, NPVariant *result) {
-	logmsg("npsimple: invoke\n");
-	int error = 1;
 	char *name = npnfuncs->utf8fromidentifier(methodName);
+	logmsg("npsimple: invoke\n");
 	if(name) {
 		if(!strcmp(name, "foo")) {
 			logmsg("npsimple: invoke foo\n");
@@ -127,7 +158,7 @@ invoke(NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t a
 			}
 		}
 	}
-	// aim exception handling
+	/* aim exception handling */
 	npnfuncs->setexception(obj, "exception during invocation");
 	return false;
 }
@@ -161,7 +192,7 @@ static NPClass npcRefObject = {
 /* NPP */
 
 static NPError
-nevv(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char *argn[], char *argv[], NPSavedData *saved) {
+nevv(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char *argn[], char *argv[], NPSavedData *saved) {
 	inst = instance;
 	logmsg("npsimple: new\n");
 	return NPERR_NO_ERROR;
@@ -198,10 +229,10 @@ getValue(NPP instance, NPPVariable variable, void *value) {
 		npnfuncs->retainobject(so);
 		*(NPObject **)value = so;
 		break;
-#if defined(XULRUNNER_SDK)
+#if defined(XULRUNNER_SDK) || defined(NPAPI_SDK)
 	case NPPVpluginNeedsXEmbed:
 		logmsg("npsimple: getvalue - xembed\n");
-		*((PRBool *)value) = PR_FALSE;
+		*((NPBool *)value) = true;
 		break;
 #endif
 	}
@@ -241,14 +272,14 @@ NP_GetEntryPoints(NPPluginFuncs *nppfuncs) {
 }
 
 #ifndef HIBYTE
-#define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
+#define HIBYTE(x) ((((uint32_t)(x)) & 0xff00) >> 8)
 #endif
 
 NPError OSCALL
 NP_Initialize(NPNetscapeFuncs *npnf
 #if defined(ANDROID)
 			, NPPluginFuncs *nppfuncs, JNIEnv *env, jobject plugin_object
-#elif !defined(_WINDOWS) && !defined(WEBKIT_DARWIN_SDK)
+#elif !defined(_WIN32) && !defined(WEBKIT_DARWIN_SDK)
 			, NPPluginFuncs *nppfuncs
 #endif
 			)
@@ -261,7 +292,7 @@ NP_Initialize(NPNetscapeFuncs *npnf
 		return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
 	npnfuncs = npnf;
-#if !defined(_WINDOWS) && !defined(WEBKIT_DARWIN_SDK)
+#if !defined(_WIN32) && !defined(WEBKIT_DARWIN_SDK)
 	NP_GetEntryPoints(nppfuncs);
 #endif
 	return NPERR_NO_ERROR;
@@ -276,7 +307,7 @@ OSCALL NP_Shutdown() {
 char *
 NP_GetMIMEDescription(void) {
 	logmsg("npsimple: NP_GetMIMEDescription\n");
-	return "application/x-vnd-aplix-foo:.foo:anselm@aplix.co.jp";
+	return FOO_MIMETYPE ":.foo:anselm@aplix.co.jp";
 }
 
 NPError OSCALL /* needs to be present for WebKit based browsers */
