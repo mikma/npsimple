@@ -13,16 +13,28 @@
  * License.
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#elif defined(_MSVC_VER)
+#include <config-msvc.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 
-#if defined(XULRUNNER_SDK)
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+
+#if defined(USE_SDK_XULRUNNER)
+
 #include <npapi.h>
 #include <npupp.h>
 #include <npruntime.h>
-#elif defined(ANDROID)
+
+#elif defined(USE_SDK_ANDROID)
 
 #undef HAVE_LONG_LONG
 #include <jni.h>
@@ -43,14 +55,14 @@ NP_BEGIN_MACRO                                                                \
     (_v).value.stringValue = str;                                             \
 NP_END_MACRO
 
-#elif defined(WEBKIT_DARWIN_SDK)
+#elif defined(USE_SDK_WEBKIT_DARWIN)
 
 #include <Webkit/npapi.h>
 #include <WebKit/npfunctions.h>
 #include <WebKit/npruntime.h>
 #define OSCALL
 
-#elif defined(WEBKIT_WINMOBILE_SDK) /* WebKit SDK on Windows */
+#elif defined(USE_SDK_WEBKIT_WINMOBILE) /* WebKit SDK on Windows */
 
 #ifndef PLATFORM
 #define PLATFORM(x) defined(x)
@@ -60,7 +72,7 @@ NP_END_MACRO
 #define OSCALL WINAPI
 #endif
 
-#elif defined(NPAPI_SDK)
+#elif defined(USE_SDK_NPAPI_SDK)
 
 #include <npapi.h>
 #include <npfunctions.h>
@@ -267,7 +279,7 @@ NPError OSCALL
 NP_Initialize(NPNetscapeFuncs *npnf
 #if defined(ANDROID)
 			, NPPluginFuncs *nppfuncs, JNIEnv *env, jobject plugin_object
-#elif !defined(_WINDOWS) && !defined(WEBKIT_DARWIN_SDK)
+#elif !defined(_WIN32) && !defined(WEBKIT_DARWIN_SDK)
 			, NPPluginFuncs *nppfuncs
 #endif
 			)
@@ -280,7 +292,7 @@ NP_Initialize(NPNetscapeFuncs *npnf
 		return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
 	npnfuncs = npnf;
-#if !defined(_WINDOWS) && !defined(WEBKIT_DARWIN_SDK)
+#if !defined(_WIN32) && !defined(WEBKIT_DARWIN_SDK)
 	NP_GetEntryPoints(nppfuncs);
 #endif
 	return NPERR_NO_ERROR;

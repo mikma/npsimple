@@ -1,4 +1,9 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <CoreServices/CoreServices.r>
+#include "common.h"
 
 // Plugin info
 resource 'STR#' (126) { {
@@ -13,5 +18,5 @@ resource 'STR#' (127) { {
 
 // MIME Types
 resource 'STR#' (128) { {
-    "application/x-vnd-aplix-foo"
+    FOO_MIMETYPE
 } };
